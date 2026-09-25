@@ -101,10 +101,12 @@ class MainActivity : HomeActivity() {
 
         val versionSuffix = BuildConfig.VERSION_NAME.removePrefix("Shizuku+ ").trim()
         val tagName = when {
-            // New format: VERSION_NAME = "Shizuku+ r2673" → tag is "r2673"
+            // Current format: "Shizuku+ 13.7.0.r2700" → tag is "13.7.0.r2700"
+            Regex("""^\d+\.\d+\.\d+\.r\d+$""").matches(versionSuffix) -> versionSuffix
+            // Transitional format: "Shizuku+ r2673" → tag is "r2673"
             versionSuffix.matches(Regex("""r\d+""")) -> versionSuffix
-            // Legacy format: VERSION_NAME = "Shizuku+ 14.0.0.r2162" → tag is "v14.0.0.r2162"
-            Regex("""\d+\.\d+\.\d+\.r\d+""").containsMatchIn(versionSuffix) ->
+            // Legacy: "Shizuku+ 14.0.0.r2162" → GitHub tag was "v14.0.0.r2162"
+            Regex("""14\.\d+\.\d+\.r\d+""").containsMatchIn(versionSuffix) ->
                 "v${Regex("""\d+\.\d+\.\d+\.r\d+""").find(versionSuffix)!!.value}"
             else -> {
                 ShizukuSettings.setLastSeenChangelogVersion(currentCode)

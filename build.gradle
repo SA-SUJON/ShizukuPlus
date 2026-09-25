@@ -19,10 +19,14 @@ def getGitCommitCount() {
     }
 }
 
+// Tracks the upstream thedjchi/Shizuku release this fork is based on.
+// Bump when a new upstream stable lands (check https://github.com/thedjchi/Shizuku/releases).
+def upstreamVersion = "13.7.0"
+
 def gitCommitCount = getGitCommitCount()
 ext {
     versionCode = gitCommitCount
-    versionName = "Shizuku+ r${gitCommitCount}"
+    versionName = "Shizuku+ ${upstreamVersion}.r${gitCommitCount}"
 }
 
 subprojects {

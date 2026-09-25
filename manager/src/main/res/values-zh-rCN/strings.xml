@@ -412,8 +412,6 @@
     <string name="settings_developer_options_revealed">开发者选项已开启！</string>
     <string name="settings_developer_options_click_more">再点击 %d 次以开启开发者选项。</string>
     <string name="settings_diagnostics_category">诊断</string>
-    <string name="settings_stealth_mode">隐身模式</string>
-    <string name="settings_stealth_mode_summary">隐藏应用图标并简化界面以保护隐私</string>
 
     <string name="settings_report_bug">报告错误</string>
     <string name="settings_activity_log">活动日志</string>

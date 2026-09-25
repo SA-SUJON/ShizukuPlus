@@ -40,18 +40,18 @@
 -keep class moe.shizuku.api.BinderContainer { *; }
 
 # Android 16 (API 36) ART verifier now enforces hidden API restrictions at class-definition
-# time, not just at field/method access time.  ProcessObserverAdapter and UidObserverAdapter
-# extend android.app.IProcessObserver$Stub and android.app.IUidObserver$Stub respectively —
-# hidden framework classes that ART 16 cannot resolve during verification.  R8 9.4 (AGP 9.4)
-# generates bytecode for these classes that differs from R8 8.x output; the new bytecode
-# triggers a hard VerifyError that fails the entire DEX on Android 16, breaking rish, the SU
-# Bridge, and every authorised app that connects to Shizuku (#537).
+# time, not just at field/method access time.  All adapter classes in this package extend
+# hidden framework stubs (IProcessObserver$Stub, IUidObserver$Stub, etc.) that ART 16 cannot
+# resolve during verification.  R8 9.4 (AGP 9.4) rewrites these classes differently from
+# R8 8.x; the new bytecode triggers a hard VerifyError that fails the entire DEX on Android 16,
+# breaking rish, the SU Bridge, and every authorised app that connects to Shizuku (#537, #544).
 #
-# Keeping both classes intact (no shrinking, no obfuscation, no optimisation) makes R8 emit
-# the original library bytecode unchanged — the same code that AGP 8.x/R8 8.x left alone
-# and that ART 16 accepted in v13.
--keep class rikka.hidden.compat.adapter.ProcessObserverAdapter { *; }
--keep class rikka.hidden.compat.adapter.UidObserverAdapter { *; }
+# The initial fix (0aa38709) kept only ProcessObserverAdapter and UidObserverAdapter.
+# A third adapter (obfuscated as e42 in the R8 output) still failed verification after that
+# fix (#544).  Broadening the keep to the entire adapter sub-package prevents R8 from
+# touching ANY class that extends a hidden framework stub, matching the behaviour of
+# R8 8.x (AGP 8.x) which left all these classes unchanged.
+-keep class rikka.hidden.compat.adapter.** { *; }
 
 # Entrance of Shizuku service
 -keep class rikka.shizuku.server.ShizukuService {

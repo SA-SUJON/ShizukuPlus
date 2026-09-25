@@ -473,7 +473,10 @@ jobs:
               echo
             fi
 
-            # Recent releases rollup (last 5 tags, current first), spotlighting the major release.
+            # Recent releases rollup (last 10 tags, current first), spotlighting the major release.
+            # 10 entries so users who install after a gap can see a longer slice of history here
+            # before having to open individual release pages. The in-app dialog fetches all
+            # releases since the user's previous install, but this covers the GitHub side too.
             echo
             echo "## 📦 Recent Releases"
             echo
@@ -489,7 +492,7 @@ jobs:
             fi
             echo "| Release | Highlight |"
             echo "|:--|:--|"
-            for t in $(git tag --list --sort=-creatordate | grep -E '^(r[0-9]+|v[0-9]+\.[0-9]+\.[0-9]+\.r[0-9]+)$' | head -5); do
+            for t in $(git tag --list --sort=-creatordate | grep -E '^(r[0-9]+|v[0-9]+\.[0-9]+\.[0-9]+\.r[0-9]+)$' | head -10); do
               SUBJ=$(git log -1 --pretty=%s "$t" 2>/dev/null | sed 's/|/\\|/g')
               MARK=""
               if [ "$t" = "$MAJOR_RELEASE" ]; then MARK=" 🚀 **major**"; fi
@@ -498,10 +501,13 @@ jobs:
               echo "| [${t}](https://github.com/${{ github.repository }}/releases/tag/${t})${MARK} | ${SUBJ} |"
             done
 
+            echo
+            echo "---"
             if [ -n "$PREV_TAG" ]; then
-              echo
-              echo "---"
-              echo "[Full Changelog](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG_NAME})"
+              echo "[Changes in this release](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG_NAME})"
+            fi
+            if [ -n "$MAJOR_RELEASE" ] && [ "$TAG_NAME" != "$MAJOR_RELEASE" ]; then
+              echo "[All changes since last major release](https://github.com/${{ github.repository }}/compare/${MAJOR_RELEASE}...${TAG_NAME})"
             fi
           } > release_notes.md
           echo "NOTES_FILE=release_notes.md" >> $GITHUB_ENV

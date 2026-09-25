@@ -14,7 +14,8 @@ object SettingsSearchEngine {
         val summary: String?,
         val category: String?,
         val fragmentClass: String,
-        val xmlResId: Int
+        val xmlResId: Int,
+        val iconResId: Int = 0
     )
 
     private var indexedItems: List<SettingItem>? = null
@@ -64,8 +65,10 @@ object SettingsSearchEngine {
                             val summaryResId = parser.getAttributeResourceValue(namespace, "summary", 0)
                             val summary = if (summaryResId != 0) context.getString(summaryResId) else parser.getAttributeValue(namespace, "summary")
 
+                            val iconResId = parser.getAttributeResourceValue(namespace, "icon", 0)
+
                             if (!title.isNullOrBlank()) {
-                                items.add(SettingItem(key, title, summary, currentCategory, fragmentClass, xmlId))
+                                items.add(SettingItem(key, title, summary, currentCategory, fragmentClass, xmlId, iconResId))
                             }
                         }
                     }

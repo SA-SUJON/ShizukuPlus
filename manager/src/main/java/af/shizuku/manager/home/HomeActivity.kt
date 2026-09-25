@@ -629,6 +629,10 @@ open class HomeActivity : AppActivity(), MavericksView {
         adapter.notifyDataSetChanged()
         checkServerStatus()
         appsModel.load()
+        // Re-check battery optimization every time the Activity resumes so the snackbar
+        // is dismissed immediately after the user grants the exemption in system settings
+        // and returns to the app (#535).
+        homeModel.checkBatteryOptimization()
     }
 
     override fun onPause() {

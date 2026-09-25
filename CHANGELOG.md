@@ -4,6 +4,15 @@ All notable changes to ShizukuPlus are documented here. See [AI_ATTRIBUTIONS.md]
 
 ## [Unreleased — post-v14.0.0]
 
+### 🐛 Bug Fixes
+
+#### Server / Service
+- **Fixed Android 16 ART VerifyError crashing rish, SU Bridge, and all third-party Shizuku connections** — R8 9.4 (AGP 9.4, new in v14) transforms `ProcessObserverAdapter` and `UidObserverAdapter` (from `dev.rikka.hidden:compat`) differently from R8 8.x, producing bytecode that Android 16's eager class verifier rejects for the entire DEX. Added `-keep { *; }` rules for both adapter classes so R8 emits the original library bytecode unchanged. ([#537](https://github.com/thejaustin/ShizukuPlus/issues/537))
+
+#### Manager App (UI)
+- **Fixed battery optimization snackbar persisting after the user grants the exemption** — `checkBatteryOptimization()` was only called in `onCreate()`, so returning from system settings never cleared the snackbar. Now called in `onResume()` as well. ([#535](https://github.com/thejaustin/ShizukuPlus/issues/535))
+- **Fixed settings search results showing no icons** — `SettingsSearchEngine` now reads `android:icon` from preference XML; `SearchResultItem` renders the icon on the left when present. TCP mode and all other preferences with icons now display correctly in search. ([#540](https://github.com/thejaustin/ShizukuPlus/issues/540))
+
 ### 🎨 UI / Visual Polish
 - **Reduced app-list horizontal padding from 52dp to 16dp (phone) / 24dp (tablet)** — items now extend naturally toward bezels matching Material3 and Samsung One UI spec; applies to every row in the Managed Apps screen, the Toggle-All card, the search field, and the filter chip strip.
 - **Fixed section-group headers misaligned with list items** — `list_section_header.xml` used an asymmetric `paddingStart=4dp` / `paddingEnd=16dp`; both are now `@dimen/margin_horizontal` so header labels align with the icon leading edge on Root Compatibility, Device Control, and Permission Manager screens.

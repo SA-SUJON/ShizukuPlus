@@ -39,15 +39,19 @@
 -keep class rikka.shizuku.BinderContainer { *; }
 -keep class moe.shizuku.api.BinderContainer { *; }
 
-# Missing class android.app.IProcessObserver$Stub
-# Missing class android.app.IUidObserver$Stub
--keepclassmembers class rikka.hidden.compat.adapter.ProcessObserverAdapter {
-    <methods>;
-}
-
--keepclassmembers class rikka.hidden.compat.adapter.UidObserverAdapter {
-    <methods>;
-}
+# Android 16 (API 36) ART verifier now enforces hidden API restrictions at class-definition
+# time, not just at field/method access time.  ProcessObserverAdapter and UidObserverAdapter
+# extend android.app.IProcessObserver$Stub and android.app.IUidObserver$Stub respectively —
+# hidden framework classes that ART 16 cannot resolve during verification.  R8 9.4 (AGP 9.4)
+# generates bytecode for these classes that differs from R8 8.x output; the new bytecode
+# triggers a hard VerifyError that fails the entire DEX on Android 16, breaking rish, the SU
+# Bridge, and every authorised app that connects to Shizuku (#537).
+#
+# Keeping both classes intact (no shrinking, no obfuscation, no optimisation) makes R8 emit
+# the original library bytecode unchanged — the same code that AGP 8.x/R8 8.x left alone
+# and that ART 16 accepted in v13.
+-keep class rikka.hidden.compat.adapter.ProcessObserverAdapter { *; }
+-keep class rikka.hidden.compat.adapter.UidObserverAdapter { *; }
 
 # Entrance of Shizuku service
 -keep class rikka.shizuku.server.ShizukuService {

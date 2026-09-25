@@ -194,6 +194,7 @@ private val SharpShapes = Shapes(
 fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     isBlackNightTheme: Boolean = false,
+    isAmoledPlus: Boolean = false,
     isOneUi: Boolean = false,
     isRoundedEdges: Boolean = true,
     themeVersion: Int = 0,
@@ -202,22 +203,20 @@ fun AppTheme(
     val context = LocalContext.current
     var colorScheme = remember(context, darkTheme, themeVersion) { androidColorScheme(context, darkTheme) }
 
-    // Belt-and-suspenders: ThemeOverlay.Black (applied via onApplyUserThemeResource) already
-    // forces colorSurface/android:colorBackground to black, so this should be redundant with the
-    // read above - kept in case a future overlay change misses one of the two attributes.
+    // Belt-and-suspenders alongside ThemeOverlay.Black / ThemeOverlay.Black.Plus applied via
+    // onApplyUserThemeResource. AMOLED mode forces background + base surfaces to black with
+    // subtle near-black elevated containers. AMOLED+ additionally collapses all containers to
+    // pure black so cards blend completely with the panel.
     if (darkTheme && isBlackNightTheme) {
         colorScheme = colorScheme.copy(
             background = Color.Black,
             surface = Color.Black,
             surfaceDim = Color.Black,
             surfaceContainerLowest = Color.Black,
-            surfaceContainerLow = Color.Black,
-            // Extend to the full surface-container tone scale so components that draw
-            // from surfaceContainer* (SearchBar suggestion pane, settings-search card,
-            // bottom sheets, etc.) also render black in AMOLED mode (#496).
-            surfaceContainer = Color(0xFF0A0A0A),
-            surfaceContainerHigh = Color(0xFF0D0D0D),
-            surfaceContainerHighest = Color(0xFF111111),
+            surfaceContainerLow = if (isAmoledPlus) Color.Black else Color(0xFF0D0D0D),
+            surfaceContainer = if (isAmoledPlus) Color.Black else Color(0xFF111111),
+            surfaceContainerHigh = if (isAmoledPlus) Color.Black else Color(0xFF141414),
+            surfaceContainerHighest = if (isAmoledPlus) Color.Black else Color(0xFF1A1A1A),
         )
     }
 

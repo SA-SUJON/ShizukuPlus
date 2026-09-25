@@ -228,10 +228,14 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
 
             // 3. Raise max_phantom_processes to INT_MAX.
             //    Replaces `device_config put activity_manager max_phantom_processes 2147483647`.
+            //    Uses reflection (no direct class reference) so ART on API < 29 does not throw
+            //    NoClassDefFoundError during class verification (#527).
             try {
-                android.provider.DeviceConfig.setProperty(
-                        "activity_manager", "max_phantom_processes",
-                        "2147483647", /* makeDefault= */ false);
+                Class<?> dc = Class.forName("android.provider.DeviceConfig");
+                java.lang.reflect.Method setProperty = dc.getMethod("setProperty",
+                        String.class, String.class, String.class, boolean.class);
+                setProperty.invoke(null, "activity_manager", "max_phantom_processes",
+                        "2147483647", false);
             } catch (Exception e) {
                 LOGGER.w("phantom killer: DeviceConfig setProperty failed", e);
             }
@@ -2468,7 +2472,10 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
     @Override
     public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
         if (isFeatureEnabled("binder_logging")) {
-            LOGGER.i("Binder transaction: code=%d, calling uid=%d, flags=%d", code, Binder.getCallingUid(), flags);
+            // Resolve the method name from the AIDL-generated TRANSACTION_* constant via reflection.
+            rikka.shizuku.server.util.BinderCallLogger.log(
+                true, moe.shizuku.server.IShizukuService.Stub.class, code, Binder.getCallingUid()
+            );
         }
         // enforceInterface() only validates the AIDL descriptor token, not caller identity — every
         // branch here additionally needs enforceCallingPermission(), matching every other exposed

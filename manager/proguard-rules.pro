@@ -77,6 +77,34 @@
     public <init>();
 }
 
+# Keep custom Preference subclasses instantiated by class name from XML preference screens.
+# Without these keeps R8 renames or removes the two-arg constructors and inflating the
+# preference screen throws ClassNotFoundException / NoSuchMethodException at runtime.
+-keep class af.shizuku.manager.settings.CollapsiblePreferenceCategory {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+-keep class af.shizuku.manager.settings.GrayableIconSwitchPreference {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+-keep class af.shizuku.manager.settings.IntegerSimpleMenuPreference {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+-keep class af.shizuku.manager.settings.HomeLayoutSimulatorPreference {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+-keep class af.shizuku.manager.settings.PlusNavPreference {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+-keep class af.shizuku.manager.settings.PlusFeaturePreference {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+-keep class af.shizuku.manager.settings.DiagnosticsDashboardPreference {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+-keep class af.shizuku.manager.settings.AppPickerPreference {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+
 # Keep WorkManager workers instantiated by name via reflection.
 # Both RemoteDbSyncWorker and AdbStartWorker must maintain their class names.
 -keep class * extends androidx.work.ListenableWorker {
@@ -148,6 +176,20 @@
 # (project uses Glance only). Suppress missing-class R8 errors for these packages.
 -dontwarn io.sentry.compose.**
 -dontwarn androidx.compose.**
+
+# android.hardware.fingerprint.FingerprintManager and its inner classes were removed from
+# the compileSdk 37 stub library (Android 17). biometric:1.2.0-alpha05 references them via
+# FingerprintManagerCompat; the compat layer gates on SDK_INT and uses BiometricPrompt
+# instead, so these references are never reached at runtime on API 28+ devices.
+-dontwarn android.hardware.fingerprint.**
+
+# androidx.window.extensions and androidx.window.sidecar are OEM extension interfaces
+# that are provided by device vendors at runtime via ServiceLoader/reflection, not by
+# the framework stub or the Jetpack AAR. AGP 9.4 / R8 9.4 strict mode requires explicit
+# dontwarn for all transitive missing classes; these are never invoked via reflection-only
+# paths that the ProGuard keep rules already guard.
+-dontwarn androidx.window.extensions.**
+-dontwarn androidx.window.sidecar.**
 
 -allowaccessmodification
 #-repackageclasses rikka.shizuku

@@ -8,6 +8,7 @@ import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceManager
 import androidx.preference.PreferenceViewHolder
 import af.shizuku.manager.R
+import af.shizuku.manager.ShizukuSettings
 
 class CollapsiblePreferenceCategory @JvmOverloads constructor(
     context: Context,
@@ -46,6 +47,22 @@ class CollapsiblePreferenceCategory @JvmOverloads constructor(
 
         holder.itemView.tag = "category_header"
 
+        val cornerStyle = ShizukuSettings.getPreferences().getString("settings_card_corner_style", "global") ?: "global"
+        if (cornerStyle != "global") {
+            val card = holder.itemView as? com.google.android.material.card.MaterialCardView
+            if (card != null) {
+                val density = card.context.resources.displayMetrics.density
+                card.radius = when (cornerStyle) {
+                    "sharp" -> 0f
+                    "rounded" -> 12f * density
+                    "large" -> 24f * density
+                    "squircle" -> 28f * density
+                    "xlarge" -> 36f * density
+                    else -> card.radius
+                }
+            }
+        }
+
         val arrow = holder.findViewById(R.id.category_arrow)
         if (!collapsible) {
             arrow?.visibility = android.view.View.GONE
@@ -57,7 +74,10 @@ class CollapsiblePreferenceCategory @JvmOverloads constructor(
         // Cancel any in-flight animator before snapping to current state on rebind —
         // otherwise a running ViewPropertyAnimator takes priority over the direct rotation setter
         // and can leave the arrow pointing the wrong way for the actual expanded state.
+        // ViewPropertyAnimator.cancel() does NOT fire withEndAction, so we must reset isAnimating
+        // manually here — otherwise a mid-animation rebind leaves it stuck at true forever.
         arrow?.animate()?.cancel()
+        isAnimating = false
         arrow?.rotation = if (expanded) 180f else 0f
         updateExpandedStateDescription(holder.itemView)
 

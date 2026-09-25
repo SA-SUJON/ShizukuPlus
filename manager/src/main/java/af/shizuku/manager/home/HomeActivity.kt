@@ -98,6 +98,7 @@ open class HomeActivity : AppActivity(), MavericksView {
     private var isOneHanded by mutableStateOf(ShizukuSettings.isOneHandedModeEnabled())
     private var isOneUi by mutableStateOf(ShizukuSettings.isOneUiThemeEnabled())
     private var isRoundedEdges by mutableStateOf(ShizukuSettings.isRoundedEdgesEnabled())
+    private var isAmoledPlus by mutableStateOf(ShizukuSettings.isAmoledPlusEnabled())
 
     // Strong reference required — SharedPreferences holds listeners weakly, so an inline lambda
     // would be eligible for GC immediately after registerOnSharedPreferenceChangeListener returns.
@@ -116,11 +117,15 @@ open class HomeActivity : AppActivity(), MavericksView {
             ShizukuSettings.Keys.KEY_SHOW_LEARN_MORE_HOME,
             ShizukuSettings.Keys.KEY_SHOW_ACTIVITY_LOG_HOME,
             ShizukuSettings.Keys.KEY_SHOW_START_ADB_HOME,
-            ShizukuSettings.Keys.KEY_SHOW_BACKUP_HOME -> adapter.updateData()
+            ShizukuSettings.Keys.KEY_SHOW_BACKUP_HOME,
+            ShizukuSettings.Keys.KEY_DEVICE_CONTROL_HOME_ENABLED -> adapter.updateData()
             ShizukuSettings.Keys.KEY_ONE_HANDED_MODE,
             ShizukuSettings.Keys.KEY_ONEUI_THEME -> {
                 isOneHanded = ShizukuSettings.isOneHandedModeEnabled()
                 isOneUi = ShizukuSettings.isOneUiThemeEnabled()
+            }
+            ShizukuSettings.Keys.KEY_AMOLED_PLUS -> {
+                isAmoledPlus = ShizukuSettings.isAmoledPlusEnabled()
             }
         }
     }
@@ -218,6 +223,7 @@ open class HomeActivity : AppActivity(), MavericksView {
             af.shizuku.core.ui.compose.AppTheme(
                 darkTheme = androidx.compose.foundation.isSystemInDarkTheme(),
                 isBlackNightTheme = af.shizuku.manager.app.ThemeHelper.isBlackNightTheme(context),
+                isAmoledPlus = isAmoledPlus,
                 isOneUi = isOneUi,
                 isRoundedEdges = isRoundedEdges
             ) {
@@ -745,7 +751,7 @@ open class HomeActivity : AppActivity(), MavericksView {
             builder.setPositiveButton(R.string.update_download) { _, _ ->
                 activeUpdateManager?.cancel()
                 activeUpdateManager = UpdateManager(this).also {
-                    it.downloadUpdate(updateInfo.downloadUrl, updateInfo.versionName)
+                    it.downloadUpdate(updateInfo.downloadUrl, updateInfo.versionName, manual = true)
                 }
             }
         }

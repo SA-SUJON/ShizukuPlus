@@ -34,6 +34,12 @@ object UpdateChecker {
     private const val READ_TIMEOUT_MS = 8_000
     private const val RETRY_DELAY_MS = 2_000L
 
+    data class ReleaseEntry(
+        val tagName: String,
+        val publishedAt: String,
+        val body: String
+    )
+
     data class UpdateInfo(
         val versionName: String,
         val versionCode: Int,
@@ -193,6 +199,29 @@ object UpdateChecker {
     }
 
     /**
+     * Fetches the most recent [count] releases from the GitHub API, newest first.
+     * Used by the in-app "What's New" dialog to show the last 5 release summaries at once.
+     * Returns an empty list on any failure so callers degrade gracefully.
+     */
+    suspend fun fetchRecentReleases(count: Int = 5): List<ReleaseEntry> = withContext(Dispatchers.IO) {
+        try {
+            val arr = fetchJson("$RELEASES_URL?per_page=$count") as? JSONArray ?: return@withContext emptyList()
+            (0 until minOf(arr.length(), count)).mapNotNull { i ->
+                val obj = arr.getJSONObject(i)
+                val tag = obj.optString("tag_name", "").ifBlank { return@mapNotNull null }
+                ReleaseEntry(
+                    tagName = tag,
+                    publishedAt = obj.optString("published_at", ""),
+                    body = obj.optString("body", "")
+                )
+            }
+        } catch (e: Exception) {
+            Timber.tag(TAG).w(e, "Failed to fetch recent releases")
+            emptyList()
+        }
+    }
+
+    /**
      * Reads GitHub's public Atom feed as a last-resort fallback.
      * Served from github.com CDN — a different network path than api.github.com.
      * Can tell us whether an update exists but cannot provide a direct APK URL.
@@ -268,9 +297,9 @@ object UpdateChecker {
         }
     }
 
-    /** Extracts the build number from "13.6.0.r1488-shizukuplus" → 1488 */
+    /** Extracts the build number from "r2673", "Shizuku+ r2673", or "13.6.0.r1488" → the number. */
     fun parseVersionCode(versionName: String): Int = try {
-        """\.\br(\d+)\b""".toRegex().find(versionName)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+        """\br(\d+)\b""".toRegex().find(versionName)?.groupValues?.get(1)?.toIntOrNull() ?: 0
     } catch (_: Exception) {
         0
     }

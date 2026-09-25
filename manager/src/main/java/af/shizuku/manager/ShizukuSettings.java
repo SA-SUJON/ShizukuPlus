@@ -6,6 +6,7 @@ import android.content.ContextWrapper;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.provider.Settings;
 import timber.log.Timber;
 import android.text.TextUtils;
 import androidx.annotation.IntDef;
@@ -83,6 +84,7 @@ public class ShizukuSettings {
         // Home card extras (Shizuku+ additions)
         public static final String KEY_SHOW_START_ADB_HOME = "show_start_adb_home";
         public static final String KEY_SHOW_BACKUP_HOME = "show_backup_home";
+        public static final String KEY_DEVICE_CONTROL_HOME_ENABLED = "device_control_home_enabled";
         public static final String KEY_CARD_ORDER = "home_card_order";
         public static final String KEY_HIDDEN_HOME_CARDS = "hidden_home_cards";
 
@@ -146,6 +148,11 @@ public class ShizukuSettings {
         public static final String KEY_BLUR_UI = "blur_ui_enabled";
         public static final String KEY_ONEUI_THEME = "oneui_theme_enabled";
         public static final String KEY_ONE_HANDED_MODE = "one_handed_mode";
+        public static final String KEY_BOLD_TYPOGRAPHY = "bold_typography";
+        public static final String KEY_EXPANDED_HEADERS = "expanded_headers_enabled";
+        public static final String KEY_CORNER_ROUNDING_OVERRIDE = "corner_rounding_override";
+        public static final String KEY_FOLLOW_SYSTEM_ANIMATIONS = "follow_system_animations";
+        public static final String KEY_FOLLOW_SYSTEM_HAPTICS = "follow_system_haptics";
 
         // Migration (Shizuku+ additions)
         public static final String KEY_MIGRATION_OFFERED = "migration_offered";
@@ -169,6 +176,9 @@ public class ShizukuSettings {
         public static final String KEY_SHOW_STATUS_CARD_OUTLINE = "show_status_card_outline";
         public static final String KEY_STATUS_CARD_OUTLINE_STYLE = "status_card_outline_style";
 
+        // AMOLED+ (Shizuku+ additions)
+        public static final String KEY_AMOLED_PLUS = "amoled_plus_enabled";
+
         // Companion Mode (Shizuku+ additions)
         public static final String KEY_COMPANION_MODE = "companion_mode";
         public static final String KEY_COMPANION_FALLBACK = "companion_fallback";
@@ -179,6 +189,7 @@ public class ShizukuSettings {
     }
 
     private static SharedPreferences sPreferences;
+    private static Context sContext;
 
     public static int getLastSeenVersion() {
         return getPreferences().getInt(Keys.KEY_LAST_SEEN_VERSION, -1);
@@ -261,6 +272,11 @@ public class ShizukuSettings {
     }
 
     public static boolean isHapticFeedbackEnabled() {
+        if (isFollowSystemHapticsEnabled() && sContext != null) {
+            int systemHaptic = Settings.System.getInt(
+                sContext.getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, 1);
+            if (systemHaptic == 0) return false;
+        }
         return getPreferences().getBoolean(Keys.KEY_HAPTIC_FEEDBACK, true);
     }
 
@@ -284,12 +300,36 @@ public class ShizukuSettings {
         return getPreferences().getBoolean(Keys.KEY_BLUR_UI, false);
     }
 
+    public static boolean isAmoledPlusEnabled() {
+        return getPreferences().getBoolean(Keys.KEY_AMOLED_PLUS, false);
+    }
+
     public static boolean isOneUiThemeEnabled() {
         return getPreferences().getBoolean(Keys.KEY_ONEUI_THEME, false);
     }
 
     public static boolean isOneHandedModeEnabled() {
         return getPreferences().getBoolean(Keys.KEY_ONE_HANDED_MODE, false);
+    }
+
+    public static boolean isBoldTypographyEnabled() {
+        return getPreferences().getBoolean(Keys.KEY_BOLD_TYPOGRAPHY, false);
+    }
+
+    public static boolean isExpandedHeadersEnabled() {
+        return getPreferences().getBoolean(Keys.KEY_EXPANDED_HEADERS, false);
+    }
+
+    public static String getCornerRoundingOverride() {
+        return getPreferences().getString(Keys.KEY_CORNER_ROUNDING_OVERRIDE, "default");
+    }
+
+    public static boolean isFollowSystemAnimations() {
+        return getPreferences().getBoolean(Keys.KEY_FOLLOW_SYSTEM_ANIMATIONS, false);
+    }
+
+    public static boolean isFollowSystemHapticsEnabled() {
+        return getPreferences().getBoolean(Keys.KEY_FOLLOW_SYSTEM_HAPTICS, false);
     }
 
     public static int getAnimationIntensity() {
@@ -304,8 +344,17 @@ public class ShizukuSettings {
      * Multiplier applied to expressive animation durations based on the "Animation Intensity"
      * setting (0=None, 1=Subtle, 2=Standard, 3=Expressive). Standard (the default) is 1.0, so
      * existing durations are unchanged unless the user opts into a different intensity.
+     * When "Follow System Animations" is on, reads ANIMATOR_DURATION_SCALE from Developer Options
+     * instead, so the app respects the user's system-wide animation speed preference.
      */
     public static float getAnimationDurationScale() {
+        if (isFollowSystemAnimations() && sContext != null) {
+            try {
+                String raw = Settings.Global.getString(
+                    sContext.getContentResolver(), Settings.Global.ANIMATOR_DURATION_SCALE);
+                if (raw != null) return Float.parseFloat(raw);
+            } catch (Exception ignored) {}
+        }
         switch (getAnimationIntensity()) {
             case 0: return 0.4f;
             case 1: return 0.7f;
@@ -352,6 +401,9 @@ public class ShizukuSettings {
         if (sPreferences == null) {
             sPreferences = getSettingsStorageContext(context)
                 .getSharedPreferences(NAME, Context.MODE_PRIVATE);
+        }
+        if (sContext == null) {
+            sContext = context.getApplicationContext();
         }
     }
 
@@ -469,11 +521,22 @@ public class ShizukuSettings {
      * launch, to make the explicit component-enabled-state match the manifest's declared default so the
      * toggle is accurate from the first time anyone looks at it; not a behavior change for anyone who
      * already relies on boot auto-start, since it stays enabled either way.
+     *
+     * This migration guard must NEVER overwrite an explicit DISABLED state - if the user has
+     * already turned off "Start on boot", don't re-enable it even if the migration flag was lost
+     * (e.g. partial backup restore, data clear). Bug #516: the unconditional setStartOnBoot(true)
+     * call was re-enabling boot start after Samsung One UI backup/restore ops reset device-protected
+     * storage, silently undoing the user's preference on the next app launch.
      */
     public static void syncStartOnBootDefaultIfNeeded(Context context) {
         SharedPreferences prefs = getPreferences();
         if (prefs == null || prefs.getBoolean(Keys.KEY_SYNCED_START_ON_BOOT_DEFAULT, false)) return;
-        setStartOnBoot(context, true);
+        // Only promote DEFAULT → ENABLED; never touch an explicitly DISABLED component.
+        ComponentName receiver = new ComponentName(context.getPackageName(), BootCompleteReceiver.class.getName());
+        int state = context.getPackageManager().getComponentEnabledSetting(receiver);
+        if (state != PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
+            setStartOnBoot(context, true);
+        }
         prefs.edit().putBoolean(Keys.KEY_SYNCED_START_ON_BOOT_DEFAULT, true).apply();
     }
 
@@ -1115,6 +1178,28 @@ public class ShizukuSettings {
     public static void setHiddenHomeCards(java.util.Set<String> hidden) {
         SharedPreferences p = getPreferences();
         if (p != null) p.edit().putStringSet(Keys.KEY_HIDDEN_HOME_CARDS, hidden).apply();
+    }
+
+    /** Whether the App Backup home card is visible. Off by default — users opt in via edit mode. */
+    public static boolean isBackupCardVisible() {
+        SharedPreferences p = getPreferences();
+        return p != null && p.getBoolean(Keys.KEY_SHOW_BACKUP_HOME, false);
+    }
+
+    public static void setBackupCardVisible(boolean visible) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putBoolean(Keys.KEY_SHOW_BACKUP_HOME, visible).apply();
+    }
+
+    /** Whether the Device Control home card is enabled (experimental, off by default). */
+    public static boolean isDeviceControlHomeEnabled() {
+        SharedPreferences p = getPreferences();
+        return p != null && p.getBoolean(Keys.KEY_DEVICE_CONTROL_HOME_ENABLED, false);
+    }
+
+    public static void setDeviceControlHomeEnabled(boolean enabled) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putBoolean(Keys.KEY_DEVICE_CONTROL_HOME_ENABLED, enabled).apply();
     }
 
     @Nullable

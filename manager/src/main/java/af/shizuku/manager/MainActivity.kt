@@ -89,38 +89,44 @@ class MainActivity : HomeActivity() {
     }
 
     /**
-     * Shows "What's New" once per version bump, using the real GitHub release notes for the
-     * exact version just installed (not "latest" — a newer build may already be out by the
-     * time the user opens the app).
+     * Shows "What's New" once per version bump, displaying the last 5 releases so users can
+     * catch up on everything they may have missed, not just the single version they just installed.
+     *
+     * Supports both the new "r{N}" tag format and the legacy "v{semver}.r{N}" format.
      */
     private fun checkAndShowChangelog() {
         val currentCode = try { packageManager.getPackageInfo(packageName, 0).versionCode } catch (_: Exception) { 0 }
         if (currentCode <= ShizukuSettings.getLastSeenChangelogVersion()) return
 
-        val versionPart = Regex("""\d+\.\d+\.\d+\.r\d+""").find(BuildConfig.VERSION_NAME)?.value
-        if (versionPart == null) {
-            // Can't build a release tag from this build's version string — mark seen so we
-            // don't retry every launch, and skip the dialog rather than showing a broken one.
-            ShizukuSettings.setLastSeenChangelogVersion(currentCode)
-            return
+        val versionSuffix = BuildConfig.VERSION_NAME.removePrefix("Shizuku+ ").trim()
+        val tagName = when {
+            // New format: VERSION_NAME = "Shizuku+ r2673" → tag is "r2673"
+            versionSuffix.matches(Regex("""r\d+""")) -> versionSuffix
+            // Legacy format: VERSION_NAME = "Shizuku+ 14.0.0.r2162" → tag is "v14.0.0.r2162"
+            Regex("""\d+\.\d+\.\d+\.r\d+""").containsMatchIn(versionSuffix) ->
+                "v${Regex("""\d+\.\d+\.\d+\.r\d+""").find(versionSuffix)!!.value}"
+            else -> {
+                // Unknown format — mark seen so we don't retry every launch
+                ShizukuSettings.setLastSeenChangelogVersion(currentCode)
+                return
+            }
         }
-        val tagName = "v$versionPart"
 
         lifecycleScope.launch {
-            val notes = try {
-                UpdateChecker.fetchReleaseNotesForTag(tagName)
+            val releases = try {
+                UpdateChecker.fetchRecentReleases(5)
             } catch (e: Exception) {
-                Timber.tag("MainActivity").w(e, "Failed to fetch changelog for $tagName")
-                null
+                Timber.tag("MainActivity").w(e, "Failed to fetch recent releases")
+                emptyList()
             }
 
-            // Mark seen regardless of fetch success — an offline user shouldn't be re-prompted
-            // on every cold start; the dialog's fallback message covers that case once.
+            // Mark seen regardless of fetch outcome — offline users shouldn't be re-prompted
+            // every launch; the dialog's fallback message handles the no-notes case.
             ShizukuSettings.setLastSeenChangelogVersion(currentCode)
 
             if (isFinishing || isDestroyed) return@launch
             try {
-                ChangelogDialogFragment.newInstance(notes, tagName)
+                ChangelogDialogFragment.newInstance(releases, tagName)
                     .show(supportFragmentManager, ChangelogDialogFragment.TAG)
             } catch (e: Exception) {
                 Timber.e(e, "Failed to show changelog dialog")

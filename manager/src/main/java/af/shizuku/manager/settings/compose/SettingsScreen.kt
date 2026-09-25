@@ -59,11 +59,11 @@ fun SettingsScreen(
 
     val isOneUi = af.shizuku.manager.ShizukuSettings.isOneUiThemeEnabled()
     val isOneHanded = af.shizuku.manager.ShizukuSettings.isOneHandedModeEnabled()
+    val isExpandedHeaders = isOneUi || af.shizuku.manager.ShizukuSettings.isExpandedHeadersEnabled()
     val context = LocalContext.current
     val isDarkTheme = isSystemInDarkTheme()
     val isBlackTheme = isDarkTheme && af.shizuku.manager.app.ThemeHelper.isBlackNightTheme(context)
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-
     LaunchedEffect(Unit) { onScrollStateCreated(scrollBehavior.state) }
     LaunchedEffect(isScrollIdle) {
         if (isScrollIdle) {
@@ -72,7 +72,7 @@ fun SettingsScreen(
             if (fraction > 0.001f && fraction < 0.999f) {
                 val target = if (fraction >= 0.5f) state.heightOffsetLimit else 0f
                 Animatable(state.heightOffset).animateTo(
-                    target, spring(stiffness = Spring.StiffnessMediumLow)
+                    target, spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)
                 ) { state.heightOffset = value }
             }
         }
@@ -82,7 +82,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             if (!isSearchActive) {
-              if (isOneUi) {
+              if (isExpandedHeaders) {
                 LargeTopAppBar(
                     title = {
                         val fraction = scrollBehavior.state.collapsedFraction
@@ -259,7 +259,7 @@ fun SettingsScreen(
                     },
                     trailingIcon = if (searchQuery.isEmpty()) null else ({
                         IconButton(onClick = { searchQuery = ""; onSearchQueryChanged("") }) {
-                            Icon(painterResource(R.drawable.ic_close_24), null)
+                            Icon(painterResource(R.drawable.ic_close_24), stringResource(R.string.cd_settings_search_clear))
                         }
                     }),
                     placeholder = { Text(stringResource(R.string.settings_search_hint)) },

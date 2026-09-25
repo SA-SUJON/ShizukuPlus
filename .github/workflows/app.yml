@@ -414,7 +414,7 @@ jobs:
           TAG_NAME="${VERSION}"
           # Find the previous release tag (ignoring current).
           # Matches both the new r{N} format and legacy v{semver}.r{N} tags for continuity.
-          PREV_TAG=$(git tag --list --sort=-creatordate | grep -E '^(r[0-9]+|v[0-9]+\.[0-9]+\.[0-9]+\.r[0-9]+)$' | grep -v "^${TAG_NAME}$" | head -1)
+          PREV_TAG=$(git tag --list --sort=-creatordate | grep -E '^(r[0-9]+|[0-9]+\.[0-9]+\.[0-9]+\.r[0-9]+|v[0-9]+\.[0-9]+\.[0-9]+\.r[0-9]+)$' | grep -v "^${TAG_NAME}$" | head -1)
 
           # Most recent MAJOR release to spotlight in every release's notes. Bump these two lines
           # when a new headline release ships (keep MAJOR_DESC to one short clause). For the CURRENT
@@ -511,7 +511,7 @@ jobs:
             fi
             echo "| Release | Highlight |"
             echo "|:--|:--|"
-            for t in $(git tag --list --sort=-creatordate | grep -E '^(r[0-9]+|v[0-9]+\.[0-9]+\.[0-9]+\.r[0-9]+)$' | head -10); do
+            for t in $(git tag --list --sort=-creatordate | grep -E '^(r[0-9]+|[0-9]+\.[0-9]+\.[0-9]+\.r[0-9]+|v[0-9]+\.[0-9]+\.[0-9]+\.r[0-9]+)$' | head -10); do
               SUBJ=$(git log -1 --pretty=%s "$t" 2>/dev/null | sed 's/|/\\|/g')
               MARK=""
               if [ "$t" = "$MAJOR_RELEASE" ]; then MARK=" 🚀 **major**"; fi

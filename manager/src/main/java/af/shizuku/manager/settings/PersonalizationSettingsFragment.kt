@@ -328,7 +328,6 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
         val localeTags = ShizukuLocales.LOCALES
         val displayLocaleTags = ShizukuLocales.DISPLAY_LOCALES
 
-        languagePreference.entries = displayLocaleTags
         languagePreference.entryValues = localeTags
 
         val currentLocaleTag = languagePreference.value

@@ -115,7 +115,12 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
         for (i in 0 until group.preferenceCount) {
             when (val pref = group.getPreference(i)) {
                 is androidx.preference.ListPreference -> {
-                    if (pref.summary == "%s") {
+                    // Guard: some rikka SimpleMenuPreference instances with useSimpleSummaryProvider
+                    // already have SimpleSummaryProvider installed by the time we reach here. Their
+                    // getSummary() can return "%s" in edge cases (e.g. value doesn't match any entry),
+                    // which would trick this check into calling setSummaryProvider() a second time —
+                    // throwing "Preference already has a SummaryProvider set." (#529 crash).
+                    if (pref.summary == "%s" && pref.summaryProvider == null) {
                         pref.summaryProvider = androidx.preference.ListPreference.SimpleSummaryProvider.getInstance()
                     }
                 }

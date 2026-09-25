@@ -40,7 +40,6 @@
             android:defaultValue="DEFAULT"
             android:entries="@array/custom_accents"
             android:entryValues="@array/custom_accents_values"
-            app:useSimpleSummaryProvider="true"
             android:icon="@drawable/ic_palette_24" />
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference

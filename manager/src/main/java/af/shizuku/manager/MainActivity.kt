@@ -89,14 +89,15 @@ class MainActivity : HomeActivity() {
     }
 
     /**
-     * Shows "What's New" once per version bump, displaying the last 5 releases so users can
-     * catch up on everything they may have missed, not just the single version they just installed.
+     * Shows "What's New" once per version bump. Fetches every release since the user's previous
+     * install so they never miss features — if they skipped 10 builds, they see all 10.
      *
      * Supports both the new "r{N}" tag format and the legacy "v{semver}.r{N}" format.
      */
     private fun checkAndShowChangelog() {
         val currentCode = try { packageManager.getPackageInfo(packageName, 0).versionCode } catch (_: Exception) { 0 }
-        if (currentCode <= ShizukuSettings.getLastSeenChangelogVersion()) return
+        val lastSeenCode = ShizukuSettings.getLastSeenChangelogVersion()
+        if (currentCode <= lastSeenCode) return
 
         val versionSuffix = BuildConfig.VERSION_NAME.removePrefix("Shizuku+ ").trim()
         val tagName = when {
@@ -106,7 +107,6 @@ class MainActivity : HomeActivity() {
             Regex("""\d+\.\d+\.\d+\.r\d+""").containsMatchIn(versionSuffix) ->
                 "v${Regex("""\d+\.\d+\.\d+\.r\d+""").find(versionSuffix)!!.value}"
             else -> {
-                // Unknown format — mark seen so we don't retry every launch
                 ShizukuSettings.setLastSeenChangelogVersion(currentCode)
                 return
             }
@@ -114,14 +114,13 @@ class MainActivity : HomeActivity() {
 
         lifecycleScope.launch {
             val releases = try {
-                UpdateChecker.fetchRecentReleases(5)
+                UpdateChecker.fetchReleasesSince(sinceVersionCode = lastSeenCode)
             } catch (e: Exception) {
-                Timber.tag("MainActivity").w(e, "Failed to fetch recent releases")
+                Timber.tag("MainActivity").w(e, "Failed to fetch releases")
                 emptyList()
             }
 
-            // Mark seen regardless of fetch outcome — offline users shouldn't be re-prompted
-            // every launch; the dialog's fallback message handles the no-notes case.
+            // Mark seen regardless of fetch outcome so offline users aren't re-prompted every launch.
             ShizukuSettings.setLastSeenChangelogVersion(currentCode)
 
             if (isFinishing || isDestroyed) return@launch

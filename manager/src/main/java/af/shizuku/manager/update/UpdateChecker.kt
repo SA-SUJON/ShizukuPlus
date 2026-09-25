@@ -199,26 +199,47 @@ object UpdateChecker {
     }
 
     /**
-     * Fetches the most recent [count] releases from the GitHub API, newest first.
-     * Used by the in-app "What's New" dialog to show the last 5 release summaries at once.
-     * Returns an empty list on any failure so callers degrade gracefully.
+     * Fetches all releases newer than [sinceVersionCode] so the in-app "What's New" dialog
+     * shows everything the user missed — not just the last 5, but every release since their
+     * previous install. Paginates the GitHub API until it finds a release at or before the
+     * cutoff, or until [maxReleases] is reached (safety cap).
+     *
+     * [sinceVersionCode] == 0 means fresh install — returns at most [maxReleases] = 5 so the
+     * first-run dialog isn't overwhelming.
      */
-    suspend fun fetchRecentReleases(count: Int = 5): List<ReleaseEntry> = withContext(Dispatchers.IO) {
+    suspend fun fetchReleasesSince(
+        sinceVersionCode: Int,
+        maxReleases: Int = if (sinceVersionCode == 0) 5 else 30
+    ): List<ReleaseEntry> = withContext(Dispatchers.IO) {
+        val result = mutableListOf<ReleaseEntry>()
         try {
-            val arr = fetchJson("$RELEASES_URL?per_page=$count") as? JSONArray ?: return@withContext emptyList()
-            (0 until minOf(arr.length(), count)).mapNotNull { i ->
-                val obj = arr.getJSONObject(i)
-                val tag = obj.optString("tag_name", "").ifBlank { return@mapNotNull null }
-                ReleaseEntry(
-                    tagName = tag,
-                    publishedAt = obj.optString("published_at", ""),
-                    body = obj.optString("body", "")
-                )
+            var page = 1
+            val maxPages = 5
+            while (page <= maxPages && result.size < maxReleases) {
+                val arr = fetchJson("$RELEASES_URL?per_page=10&page=$page") as? JSONArray ?: break
+                if (arr.length() == 0) break
+                var foundCutoff = false
+                for (i in 0 until arr.length()) {
+                    val obj = arr.getJSONObject(i)
+                    val tag = obj.optString("tag_name", "").ifBlank { continue }
+                    val vc = parseVersionCode(tag.removePrefix("v"))
+                    if (vc <= sinceVersionCode) { foundCutoff = true; break }
+                    result.add(
+                        ReleaseEntry(
+                            tagName = tag,
+                            publishedAt = obj.optString("published_at", ""),
+                            body = obj.optString("body", "")
+                        )
+                    )
+                    if (result.size >= maxReleases) break
+                }
+                if (foundCutoff || arr.length() < 10) break
+                page++
             }
         } catch (e: Exception) {
-            Timber.tag(TAG).w(e, "Failed to fetch recent releases")
-            emptyList()
+            Timber.tag(TAG).w(e, "Failed to fetch releases since versionCode $sinceVersionCode")
         }
+        result
     }
 
     /**

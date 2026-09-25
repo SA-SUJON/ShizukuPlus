@@ -15,6 +15,7 @@ All notable changes to ShizukuPlus are documented here. See [AI_ATTRIBUTIONS.md]
 
 ### 🎨 UI / Visual Polish
 - **Reduced app-list horizontal padding from 52dp to 16dp (phone) / 24dp (tablet)** — items now extend naturally toward bezels matching Material3 and Samsung One UI spec; applies to every row in the Managed Apps screen, the Toggle-All card, the search field, and the filter chip strip.
+- **Fixed Toggle-All card width not matching the app list items** — the Toggle-All card in the Managed Apps screen kept 24dp content padding after the margin reduction, so its text started 40dp from the screen edge while the icon in each row started at 16dp. Now uses `@dimen/margin_horizontal` content padding and no horizontal margins, making the card span the full list width and its content align with the row icons. ([#539](https://github.com/thejaustin/ShizukuPlus/issues/539))
 - **Fixed section-group headers misaligned with list items** — `list_section_header.xml` used an asymmetric `paddingStart=4dp` / `paddingEnd=16dp`; both are now `@dimen/margin_horizontal` so header labels align with the icon leading edge on Root Compatibility, Device Control, and Permission Manager screens.
 
 ### 🔧 Features

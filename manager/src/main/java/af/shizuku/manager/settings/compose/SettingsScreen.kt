@@ -182,7 +182,7 @@ fun SettingsScreen(
                                 )
                             }
                         },
-                        colors = TopAppBarDefaults.largeTopAppBarColors(
+                        colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = Color.Transparent,
                             scrolledContainerColor = if (af.shizuku.manager.ShizukuSettings.isBlurUiEnabled())
                                 MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_conflict_title">Shizuku Asli Terdeteksi</string>
+    <string name="companion_conflict_description">Memasang Shizuku asli bersamaan dengan Shizuku+ dapat menyebabkan konflik izin dan aplikasi mogok. Untuk memastikan Shizuku+ berfungsi dengan benar, silakan hapus atau nonaktifkan aplikasi Shizuku asli.\n\nAnda dapat melakukannya melalui:\n1. Pengaturan -> Aplikasi -> Shizuku -> Nonaktifkan/Hapus instalan\n2. Tombol di bawah (jika layanan Shizuku+ berjalan)\n3. ADB: adb shell pm disable-user --user 0 moe.shizuku.privileged.api</string>
+    <string name="companion_action_disable">Nonaktifkan Versi Asli</string>
+    <string name="companion_action_uninstall">Hapus Instalan Asli</string>
+    <string name="companion_disable_success">Shizuku asli berhasil dinonaktifkan.</string>
+    <string name="companion_disable_failure">Gagal menonaktifkan Shizuku asli. Pastikan Shizuku+ berjalan atau gunakan ADB secara manual.</string>
+    <string name="companion_action_disabling">Menonaktifkan…</string>
+
+    <string name="compat_hub_installed_title">Compat Hub Terpasang</string>
+    <string name="compat_hub_installed_desc">Aplikasi pihak ketiga (seperti SwiftBackup) sekarang akan mendeteksi Shizuku+ secara lancar.</string>
+    <string name="compat_hub_missing_title">Memerlukan Compat Hub</string>
+    <string name="compat_hub_missing_desc">Aplikasi pihak ketiga yang memeriksa Shizuku asli secara eksplisit tidak akan mendeteksi Shizuku+. Pasang Compat Hub yang ringan agar aplikasi dapat mendeteksi Shizuku+.</string>
+    <string name="compat_hub_install_btn">Pasang Compat Hub</string>
+    <string name="compat_hub_installing">Memasang…</string>
+    <string name="compat_hub_install_success">Compat Hub berhasil dipasang!</string>
+    <string name="compat_hub_install_fail">Gagal memasang. Pastikan Shizuku+ atau Root aktif.</string>
+    <string name="compat_hub_install_fail_detail">Gagal memasang: %1$s</string>
+    <string name="compat_hub_install_fail_restricted">Tidak dapat memasang: diblokir oleh pembatasan perangkat (misalnya Samsung Auto Blocker). Nonaktifkan Auto Blocker di Pengaturan → Keamanan → Auto Blocker dan coba lagi.</string>
+    <string name="compat_hub_install_signature_conflict">Tidak dapat memasang: aplikasi lain (misalnya Shizuku asli) telah terpasang sebagai moe.shizuku.privileged.api dengan tanda tangan yang tidak kompatibel. Hapus instalan aplikasi tersebut terlebih dahulu.</string>
+    <string name="compat_hub_install_fail_storage">Tidak dapat memasang: ruang penyimpanan pada perangkat tidak cukup.</string>
+    <string name="compat_hub_install_fail_abi">Tidak dapat memasang: Compat Hub tidak mendukung arsitektur CPU perangkat ini.</string>
+    <string name="compat_hub_install_manual_launched">Membuka penginstal — ikuti petunjuk di layar untuk menyelesaikan pemasangan.</string>
+    <string name="compat_hub_install_fail_newprocess">Perangkat Anda membatasi API pembuatan proses Shizuku. Membuka penginstal sistem sebagai gantinya — ketuk Pasang saat diminta.</string>
+</resources>

@@ -295,6 +295,7 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
 
         translationPreference.apply {
             summary = context.getString(R.string.settings_translation_summary, context.getString(R.string.app_name))
+            widgetLayoutResource = R.layout.preference_widget_open_in_new
             setOnPreferenceClickListener {
                 CustomTabsHelper.launchUrlOrCopy(context, context.getString(R.string.translation_url))
                 true

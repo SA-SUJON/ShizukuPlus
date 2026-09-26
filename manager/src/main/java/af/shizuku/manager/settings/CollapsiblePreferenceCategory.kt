@@ -63,12 +63,39 @@ class CollapsiblePreferenceCategory @JvmOverloads constructor(
             }
         }
 
+        val iconView = holder.findViewById(android.R.id.icon) as? android.widget.ImageView
+        if (iconView != null) {
+            val catIcon = icon
+            if (catIcon != null) {
+                iconView.setImageDrawable(catIcon)
+                iconView.visibility = android.view.View.VISIBLE
+            } else {
+                iconView.visibility = android.view.View.GONE
+            }
+        }
+
+        val summaryView = holder.findViewById(android.R.id.summary) as? android.widget.TextView
+        if (summaryView != null) {
+            val catSummary = summary
+            if (!catSummary.isNullOrEmpty()) {
+                summaryView.text = catSummary
+                summaryView.visibility = android.view.View.VISIBLE
+            } else {
+                summaryView.visibility = android.view.View.GONE
+            }
+        }
+
         val arrow = holder.findViewById(R.id.category_arrow)
+        val arrowContainer = holder.findViewById(R.id.category_arrow_container)
         if (!collapsible) {
             arrow?.visibility = android.view.View.GONE
+            arrowContainer?.visibility = android.view.View.GONE
             holder.itemView.setOnClickListener(null)
             holder.itemView.isClickable = false
             return
+        } else {
+            arrow?.visibility = android.view.View.VISIBLE
+            arrowContainer?.visibility = android.view.View.VISIBLE
         }
 
         // Cancel any in-flight animator before snapping to current state on rebind —
@@ -85,13 +112,14 @@ class CollapsiblePreferenceCategory @JvmOverloads constructor(
             // Guard against fast double-taps: a second tap before the arrow finishes rotating
             // would flip `expanded` twice and leave the arrow snapped to the wrong angle.
             if (isAnimating) return@setOnClickListener
+            af.shizuku.manager.utils.HapticUtils.tap(holder.itemView)
             expanded = !expanded
             if (shouldPersist()) persistBoolean(expanded)
             // Animate arrow with M3E spring-style motion
             arrow?.animate()
                 ?.rotation(if (expanded) 180f else 0f)
-                ?.setDuration(af.shizuku.manager.ShizukuSettings.scaledAnimationDuration(300))
-                ?.setInterpolator(android.view.animation.OvershootInterpolator(0.8f))
+                ?.setDuration(af.shizuku.manager.ShizukuSettings.scaledAnimationDuration(260))
+                ?.setInterpolator(android.view.animation.OvershootInterpolator(1.1f))
                 ?.withStartAction { isAnimating = true }
                 ?.withEndAction { isAnimating = false }
                 ?.start()

@@ -5,6 +5,7 @@
     <af.shizuku.manager.settings.CollapsiblePreferenceCategory
         android:key="category_color_theme"
         android:title="@string/settings_personalization_category_color_theme"
+        android:icon="@drawable/ic_palette_24"
         android:defaultValue="true">
 
         <af.shizuku.manager.settings.IntegerSimpleMenuPreference
@@ -75,6 +76,7 @@
     <af.shizuku.manager.settings.CollapsiblePreferenceCategory
         android:key="category_shape_style"
         android:title="@string/settings_personalization_category_shape_style"
+        android:icon="@drawable/ic_window_24"
         android:defaultValue="true">
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
@@ -151,6 +153,7 @@
     <af.shizuku.manager.settings.CollapsiblePreferenceCategory
         android:key="category_motion_display"
         android:title="@string/settings_personalization_category_motion_display"
+        android:icon="@drawable/ic_outline_play_arrow_24"
         android:defaultValue="true">
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
@@ -210,6 +213,7 @@
     <af.shizuku.manager.settings.CollapsiblePreferenceCategory
         android:key="category_home_screen"
         android:title="@string/settings_personalization_category_home_screen"
+        android:icon="@drawable/ic_smartphone_24"
         android:defaultValue="true">
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
@@ -247,7 +251,8 @@
     <af.shizuku.manager.settings.CollapsiblePreferenceCategory
         android:key="category_language"
         android:title="@string/settings_personalization_category_language"
-        android:defaultValue="false">
+        android:icon="@drawable/ic_outline_translate_24"
+        android:defaultValue="true">
 
         <rikka.preference.SimpleMenuPreference
             android:defaultValue="SYSTEM"
@@ -258,7 +263,8 @@
         <Preference
             android:key="translation"
             android:title="@string/settings_translation"
-            android:icon="@drawable/ic_outline_translate_24" />
+            android:icon="@drawable/ic_outline_translate_24"
+            app:widgetLayout="@layout/preference_widget_open_in_new" />
 
     </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
 

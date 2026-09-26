@@ -6,31 +6,71 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingHorizontal="16dp"
-    android:paddingVertical="14dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="12dp"
+    android:paddingVertical="12dp"
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
     android:tag="category_header">
 
-    <TextView
-        android:id="@android:id/title"
+    <ImageView
+        android:id="@android:id/icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="16dp"
+        android:tint="?colorPrimary"
+        android:visibility="gone"
+        android:importantForAccessibility="no"
+        android:contentDescription="@null"
+        tools:visibility="visible"
+        tools:src="@drawable/ic_outline_translate_24" />
+
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-        android:textStyle="bold"
-        android:textColor="?colorPrimary"
-        tools:text="Category Title" />
+        android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/category_arrow"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        <TextView
+            android:id="@android:id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            android:textStyle="bold"
+            android:textColor="?colorPrimary"
+            tools:text="Category Title" />
+
+        <TextView
+            android:id="@android:id/summary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            android:textColor="?colorOnSurfaceVariant"
+            android:visibility="gone"
+            tools:text="Category Summary"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/category_arrow_container"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:layout_marginStart="8dp"
-        android:src="@drawable/ic_outline_expand_more_24"
-        android:tint="?colorPrimary"
-        android:contentDescription="@null"
-        android:importantForAccessibility="no" />
+        android:background="@drawable/bg_category_arrow_toggle">
+
+        <ImageView
+            android:id="@+id/category_arrow"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_outline_expand_more_24"
+            android:tint="?colorPrimary"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no" />
+
+    </FrameLayout>
 
 </LinearLayout>

@@ -25,7 +25,7 @@ android {
         manifestPlaceholders = [sentryDsn: sentryDsn]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
-        multiDexKeepProguard file("multidex-keep.pro")
+        multiDexKeepProguard = file("multidex-keep.pro")
         externalNativeBuild {
             cmake {
                 arguments = ["-DANDROID_STL=none", "-DANDROID_LD=lld", "-Wl,-z,max-page-size=16384"]

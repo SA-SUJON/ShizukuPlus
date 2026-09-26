@@ -1031,6 +1031,7 @@
 
     <string name="changelog_title">Що нового</string>
     <string name="changelog_close">Закрити</string>
+    <string name="changelog_earlier_releases">Попередні релізи</string>
     <string name="changelog_view_on_github">Переглянути на GitHub</string>
     <string name="changelog_fallback_message">Не вдалося завантажити примітки до випуску для цього оновлення (можливо, ви офлайн). Натисніть \"Переглянути на GitHub\", щоб побачити зміни.</string>
 
